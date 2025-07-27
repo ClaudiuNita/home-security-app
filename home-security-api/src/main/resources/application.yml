@@ -1,0 +1,11 @@
+
+
+spring:
+  application:
+    name: home-security-api
+  profiles:
+    active: dev
+logging:
+  level:
+    org.springframework.web: DEBUG
+
