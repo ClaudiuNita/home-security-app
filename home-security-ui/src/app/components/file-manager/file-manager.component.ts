@@ -15,7 +15,7 @@ export class FileManagerComponent {
   
   files: FileData[] = [];
   filteredFiles: FileData[] = [];
-  allCameraNr: number[] = [];
+  allCameraNr = new Set();
   totalSize: string | undefined;
   selectedDate = '';
   showModal = false;
@@ -41,7 +41,7 @@ export class FileManagerComponent {
 
     this.filteredFiles = this.files;
     this.totalSize = Intl.NumberFormat('en-us', {minimumFractionDigits: 2}).format(this.files.reduce((sum, file) => sum + file.size, 0));
-    this.allCameraNr = this.files.map(file => file.cameraNr);
+    this.allCameraNr = new Set(this.files.map(file => file.cameraNr));
   }
 
   sortBy(column: any) {
@@ -86,10 +86,14 @@ export class FileManagerComponent {
     this.totalSize = Intl.NumberFormat('en-us', {minimumFractionDigits: 2}).format(this.filteredFiles.reduce((sum, file) => sum + file.size, 0));
   }
 
-  getFilesByDate(selectedDate: string) {
-    this.fileManager.getFilesByDate(selectedDate).subscribe(
-      files => this.files = files
+  async getFilesByDate(selectedDate: string) {
+    await lastValueFrom(this.fileManager.getFilesByDate(selectedDate)).then(
+      files => this.files = files      
     );
+
+    this.filteredFiles = this.files;
+    this.totalSize = Intl.NumberFormat('en-us', {minimumFractionDigits: 2}).format(this.files.reduce((sum, file) => sum + file.size, 0));
+    this.allCameraNr = new Set(this.files.map(file => file.cameraNr));
   }
 
   downloadFile(file: FileData) {
