@@ -1,100 +1,77 @@
 package com.example.home_security_api.controller;
 
-import com.example.home_security_api.config.AppConfig;
-import com.example.home_security_api.model.FileData;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.http.ResponseEntity;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
+
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.text.DateFormat;
-import java.text.DecimalFormat;
-import java.text.NumberFormat;
-import java.text.SimpleDateFormat;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
-import java.util.stream.Collectors;
+import com.example.home_security_api.model.FileData;
+import com.example.home_security_api.service.FileService;
 
 @RestController
 @RequestMapping("/api/files")
 public class FileController {
 
-    private AppConfig appConfig;
-    private String directory; 
-    private NumberFormat nf = new DecimalFormat("#.00");
-    private DateFormat df = new SimpleDateFormat("yyyy-MM-dd hh:MM:ss a");
+    private FileService fileService;
 
-    public FileController(AppConfig appConfig) {
-        this.appConfig = appConfig;
+    public FileController(FileService fileService) {
+        this.fileService = fileService;
     }
 
     @GetMapping
     public ResponseEntity<List<FileData>> getFiles(@RequestParam(required = false) String selectedDate) {
-        
-        if (selectedDate == null) {
-            String currenDate = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
-            setDirectory(currenDate);
-        } else {
-            setDirectory(selectedDate);
-        }
 
-        File folder = new File(directory);
-        if (!folder.exists() || !folder.isDirectory()) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
-
-        List<FileData> fileData = Arrays.stream(folder.listFiles())
-            .filter(File::isFile)
-            .map(file -> 
-                    new FileData()
-                        .setName(file.getName())
-                        .setCameraNr(Integer.parseInt(file.getName().split("_")[1]))
-                        .setType(file.getName().split("\\.")[1])
-                        .setSize(Double.parseDouble(nf.format((double) file.length() / 1024 / 1024)))
-                        .setPath(file.getPath())
-                        .setCreated(df.format(new Date(file.lastModified())))
-            )
-            .collect(Collectors.toList());
-            
-            return new ResponseEntity<>(fileData, HttpStatus.OK);
-        }
+        return fileService.getFiles(selectedDate)
+            .map(ResponseEntity::ok)
+            .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).build());
+    }
         
-        @DeleteMapping()
-        public void deleteFile(@RequestBody FileData file) {
-            File fileDelete = new File(file.getPath());
-            fileDelete.delete();
+    @DeleteMapping
+    public ResponseEntity<Void> deleteFile(@RequestBody FileData file) {
+
+        try {
+            fileService.deleteFile(file);
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
+    }
 
     @PostMapping("/download")
     public ResponseEntity<Resource> downloadFile(@RequestBody FileData file) throws IOException {
 
-        Path filePath = Paths.get(file.getPath()).normalize();
-        
-        if (!filePath.startsWith(directory) || !Files.exists(filePath)) {
+        Resource resource = new UrlResource(
+                fileService.getFileUri(file).orElseThrow(() -> new IOException("File not found")));
+
+        if (!resource.exists()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
 
-        Resource resource = new UrlResource(filePath.toUri());
-
         return ResponseEntity.ok()
-            .contentType(MediaType.APPLICATION_OCTET_STREAM)
-            .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filePath.getFileName().toString() + "\"")
-            .body(resource);
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + file.getName().toString() + "\"")
+                .body(resource);
     }
 
     @GetMapping("/video/{fileName}")
     public ResponseEntity<Resource> getVideo(@PathVariable String fileName) throws IOException {
 
-        Path path = Paths.get(directory + appConfig.getEnvironment().getSeparator() + fileName);
+        Path path = fileService.getFilePath(fileName);
 
         if (!Files.exists(path)) {
             return ResponseEntity.notFound().build();
@@ -102,6 +79,7 @@ public class FileController {
 
         Resource resource = new UrlResource(path.toUri());
         String contentType = Files.probeContentType(path);
+
         if (contentType == null) {
             contentType = "application/octet-stream";
         }
@@ -109,9 +87,5 @@ public class FileController {
         return ResponseEntity.ok()
             .contentType(MediaType.parseMediaType(contentType))
             .body(resource);
-    }
-
-    public void setDirectory(String date) {
-        directory = appConfig.getEnvironment().getBasePath() + date;
     }
 }

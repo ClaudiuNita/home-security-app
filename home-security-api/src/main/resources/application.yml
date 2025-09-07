@@ -5,7 +5,15 @@ spring:
     name: home-security-api
   profiles:
     active: dev
+  datasource:
+    driver-class-name: org.sqlite.JDBC
+  jpa:
+    database-platform: org.hibernate.community.dialect.SQLiteDialect
+    hibernate.ddl-auto: update
+
 logging:
   level:
     org.springframework.web: DEBUG
+    org.hibernate.SQL: debug
+    org.hibernate.orm.jdbc.bind: trace
 

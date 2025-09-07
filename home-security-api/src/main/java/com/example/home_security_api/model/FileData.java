@@ -1,7 +1,18 @@
 package com.example.home_security_api.model;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+
+@Entity
+@Table(name = "file_data")
 public class FileData {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
     private String name;
     private int cameraNr;
     private String type;
@@ -63,5 +74,10 @@ public class FileData {
     public FileData setCreated(String created) {
         this.created = created;
         return this;
+    }
+
+    @Override
+    public String toString() {
+        return name;
     }
 }
