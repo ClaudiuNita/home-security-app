@@ -49,7 +49,9 @@ public class FileService {
 
         File folder = new File(directory);
         if (!folder.exists() || !folder.isDirectory()) {
-            return Optional.empty();
+            if (selectedDate == null) 
+                folder.mkdir();
+            else return Optional.empty();
         }
 
         List<FileData> fileData = Arrays.stream(folder.listFiles())
