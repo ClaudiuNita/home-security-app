@@ -124,12 +124,22 @@
                 <td class="px-6 py-4">
                     {{file.size}} <b>MB</b>
                 </td>
-                <td class="px-6 py-4">
-                    <button (click)="getVideoUrl(file.name)" class="cursor-pointer">
-                        <svg class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
-                            <path fill-rule="evenodd" d="M8.6 5.2A1 1 0 0 0 7 6v12a1 1 0 0 0 1.6.8l8-6a1 1 0 0 0 0-1.6l-8-6Z" clip-rule="evenodd"/>
-                        </svg>
-                    </button>
+                <td class="relative px-6 py-4">
+                    <div class="relative inline-block">
+                        <video
+                            width="100"
+                            [src]="getVideoUrl(file.name)"
+                            preload="metadata"
+                            class="block">
+                        </video>
+                        <button 
+                            (click)="getVideoUrl(file.name)" 
+                            class="absolute inset-0 flex items-center justify-center cursor-pointer hover:bg-black hover:bg-opacity-30 transition-colors w-full h-full">
+                            <svg class="w-6 h-6 text-white drop-shadow-lg" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                                <path fill-rule="evenodd" d="M8.6 5.2A1 1 0 0 0 7 6v12a1 1 0 0 0 1.6.8l8-6a1 1 0 0 0 0-1.6l-8-6Z" clip-rule="evenodd"/>
+                            </svg>
+                        </button>
+                    </div>
                 </td>
                 <td class="px-6 py-4">
                     <a (click)="downloadFile(file)" class="font-medium text-blue-600 dark:text-blue-500 hover:underline cursor-pointer">Download</a>
