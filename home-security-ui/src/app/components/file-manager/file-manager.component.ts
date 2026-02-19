@@ -107,8 +107,11 @@ export class FileManagerComponent {
   }
 
   getVideoUrl(fileName: string) {
-    this.showModal = true
-    this.videoUrl = this.fileManager.getVideoUrl(fileName);
-    return this.videoUrl;
+    this.showModal = true;
+    this.videoUrl = this.fileManager.getVideoUrl(fileName);;
+  }
+
+  getVideoThumbnailUrl(fileName: string) {
+    return this.fileManager.getVideoUrl(fileName);
   }
 }
