@@ -20,7 +20,8 @@ export class FileManagerComponent {
   selectedDate = '';
   showModal = false;
   videoUrl = '';
-  
+  todayDate = new Date().toISOString().split('T')[0]; 
+  selectedValues: number[] = [];
   sortColumn = '';
   sortDirection: 'asc' | 'desc' = 'asc';
 
@@ -40,8 +41,31 @@ export class FileManagerComponent {
     }
 
     this.filteredFiles = this.files;
-    this.totalSize = Intl.NumberFormat('en-us', {minimumFractionDigits: 2}).format(this.files.reduce((sum, file) => sum + file.size, 0));
+    this.totalSize = Intl.NumberFormat('en-us', {minimumFractionDigits: 2})
+      .format(this.files.reduce((sum, file) => sum + file.size, 0));
     this.allCameraNr = new Set(this.files.map(file => file.cameraNr));
+  }
+
+  ngAfterViewInit() {
+    const observer = new MutationObserver(() => {
+      this.highlightToday();
+    });
+
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true
+    });
+  }
+
+  highlightToday() {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const timestamp = today.getTime();
+
+    const el = document.querySelector(
+      `[data-date="${timestamp}"]`
+    );
+    el?.classList.add('bg-gray-500');
   }
 
   sortBy(column: any) {
@@ -67,8 +91,6 @@ export class FileManagerComponent {
     });
   }
 
-  selectedValues: number[] = [];
-
   onCameraSelect(event: any) {
     const value = event.target.value;
     const isChecked = event.target.checked;
@@ -83,7 +105,8 @@ export class FileManagerComponent {
     if (this.selectedValues.length > 0)
       this.filteredFiles = this.files.filter(file => this.selectedValues.find(v => v == file.cameraNr))
 
-    this.totalSize = Intl.NumberFormat('en-us', {minimumFractionDigits: 2}).format(this.filteredFiles.reduce((sum, file) => sum + file.size, 0));
+    this.totalSize = Intl.NumberFormat('en-us', {minimumFractionDigits: 2})
+      .format(this.filteredFiles.reduce((sum, file) => sum + file.size, 0));
   }
 
   async getFilesByDate(selectedDate: string) {
@@ -92,7 +115,8 @@ export class FileManagerComponent {
     );
 
     this.filteredFiles = this.files;
-    this.totalSize = Intl.NumberFormat('en-us', {minimumFractionDigits: 2}).format(this.files.reduce((sum, file) => sum + file.size, 0));
+    this.totalSize = Intl.NumberFormat('en-us', {minimumFractionDigits: 2})
+      .format(this.files.reduce((sum, file) => sum + file.size, 0));
     this.allCameraNr = new Set(this.files.map(file => file.cameraNr));
   }
 
