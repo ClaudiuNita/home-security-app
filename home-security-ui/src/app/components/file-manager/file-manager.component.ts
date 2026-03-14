@@ -76,7 +76,7 @@ export class FileManagerComponent {
       this.sortDirection = 'asc';
     }
 
-    this.files.sort((a: any, b: any) => {
+    this.filteredFiles.sort((a: any, b: any) => {
       let valA = a[column];
       let valB = b[column];
 
